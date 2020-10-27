@@ -15,17 +15,56 @@ dependencies {
     implementation project(':omnij-rpc')
     implementation "${consensusjGroup}:${consensusjBtcCliArtifact}:${consensusjVersion}"
 
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}:indy"
+    runtimeOnly "org.slf4j:slf4j-jdk14:${slf4jVersion}"
 }
 
-mainClassName = "foundation.omni.cli.ConsensusCLI"
+application {
+    mainClass = 'foundation.omni.cli.ConsensusCLI'
+    applicationName = 'ConsensusCLI'
+}
+
+run {
+// Local vs remote omniwallet
+    args = [ '-verbose', '-rpcwait', '-rpcconnect=127.0.0.1', '-property=1', '-compare', '-omniwallet-url=https://www.omniwallet.org']   // Local vs remote omniwallet
+
+// Local vs remote omniwallet ALL PROPERTIES
+//    args = [ '-verbose', '-rpcwait', '-rpcconnect=127.0.0.1', '-compare', '-omniwallet-url=https://www.omniwallet.org']
+
+// Local vs "remote" Omni Core RegTest ALL PROPERTIES
+//    args = [ '-verbose', '-regtest', '-rpcwait', '-rpcconnect=127.0.0.1', '-compare', "--omnicore-url=http://${rpcTestUser}:${rpcTestPassword}@127.0.0.1:18443/"]
+
+// Local vs "remote" Omni Core  ALL PROPERTIES
+//    args = [ '-verbose', '-rpcwait', '-rpcconnect=127.0.0.1', '-compare', "--omnicore-url=http://${rpcTestUser}:${rpcTestPassword}@127.0.0.1:8332/"]   // Local vs "remote" Omni Core  ALL PROPERTIES
+
+// Print property balance from Localhost
+//    args = ['-verbose', '-regtest', '-rpcwait', '-rpcconnect=127.0.0.1', "-property=1"]   // RegTest Localhost
+}
 
 jar {
     manifest {
         attributes 'Implementation-Title': 'BTC/OMNI Status',
                 'Implementation-Version': archiveVersion.get(),
-                'Consensus-Class': mainClassName
+                'Main-Class': application.mainClass
     }
+}
+
+// Compile a native image using GraalVM's native-image tool
+// Graal must be installed at $GRAAL_HOME
+task nativeImage(type:Exec, dependsOn: jar) {
+    workingDir = projectDir
+    executable = "${System.env.GRAAL_HOME}/bin/native-image"
+    args = [ '--verbose',
+             '--no-fallback',
+             '-cp', "${-> configurations.runtimeClasspath.asPath}", // Lazy configuration resolution
+             '-jar', jar.archiveFile.get(),
+             '-H:Path=build',
+             '-H:Name=omnij-consensus-tool',
+             '--initialize-at-build-time=com.fasterxml.jackson.annotation.JsonProperty$Access',
+             '-H:IncludeResources=logging.properties',
+             '-H:ReflectionConfigurationFiles=graal-reflection-config.json',
+             '-H:EnableURLProtocols=http,https',
+             '-H:+ReportUnsupportedElementsAtRuntime'
+    ]
 }
 
 // Test Structure
@@ -46,8 +85,9 @@ sourceSets {
 }
 
 task regTest(type: Test) {
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
+    useJUnitPlatform()
+    testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
+    classpath = project.sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false }
     testLogging.showStandardStreams = true
     beforeSuite { descriptor ->
@@ -81,13 +121,7 @@ task getOmniConsensus(dependsOn: 'classes',  type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 
-task getChestConsensus(dependsOn: 'classes',  type: JavaExec) {
-    main = 'foundation.omni.consensus.ChestConsensusTool'
-    args = [currencyID, 'build/chest_consensus.txt']
-    classpath = sourceSets.main.runtimeClasspath
-}
-
-task getConsensus(dependsOn: ['getCoreConsensus', 'getOmniConsensus', 'getChestConsensus']) {
+task getConsensus(dependsOn: ['getCoreConsensus', 'getOmniConsensus']) {
     doLast {
         logger.info "Consensus files are in build/*_consensus.txt"
     }

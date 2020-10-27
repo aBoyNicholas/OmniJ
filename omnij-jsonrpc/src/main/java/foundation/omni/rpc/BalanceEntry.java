@@ -26,6 +26,23 @@ public class BalanceEntry implements Iterable<OmniValue>  {
         this.frozen = (frozen != null) ? frozen : OmniValue.of(0, balance.getPropertyType());
     }
 
+    public OmniValue getBalance() {
+        return balance;
+    }
+
+    public OmniValue getReserved() {
+        return reserved;
+    }
+
+    public OmniValue getFrozen() {
+        return frozen;
+    }
+
+    public static OmniValue totalBalance(BalanceEntry balanceEntry) {
+        return balanceEntry.balance
+                .plus(balanceEntry.reserved);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -46,22 +63,11 @@ public class BalanceEntry implements Iterable<OmniValue>  {
         return result;
     }
 
-    public OmniValue getBalance() {
-        return balance;
-    }
-
-    public OmniValue getReserved() {
-        return reserved;
-    }
-
-    public OmniValue getFrozen() {
-        return frozen;
-    }
 
     /**
      * Useful for Spock tests
      *
-     * @return an iterator that will iterate the two BigDecimal fields
+     * @return an iterator that will iterate the three OmniValue fields
      */
     @Override
     public Iterator<OmniValue> iterator() {
@@ -70,7 +76,9 @@ public class BalanceEntry implements Iterable<OmniValue>  {
 
     @Override
     public String toString() {
-        return "[balance: " + balance + ", reserved: " + reserved + ", frozen: " + frozen + "]";
+        return "[balance: " + balance.toJsonFormattedString() +
+                ", reserved: " + reserved.toJsonFormattedString() +
+                ", frozen: " + frozen.toJsonFormattedString() + "]";
     }
 
 }

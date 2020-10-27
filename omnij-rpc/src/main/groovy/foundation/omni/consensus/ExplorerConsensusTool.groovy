@@ -13,9 +13,11 @@ import org.bitcoinj.core.LegacyAddress
 
 /**
  * Command-line tool and class for fetching OmniExplorer consensus data
+ * @deprecated Use OmniwalletConsensusTool
  */
 @Slf4j
-class ExplorerConsensusTool implements ConsensusTool {
+@Deprecated
+abstract class ExplorerConsensusTool implements ConsensusTool {
     static URI ExplorerHost_Live = new URI("https://api.omniexplorer.info");
     private final String proto
     private final String host
@@ -34,11 +36,12 @@ class ExplorerConsensusTool implements ConsensusTool {
     }
 
     public static void main(String[] args) {
-        ExplorerConsensusTool tool = new ExplorerConsensusTool(ExplorerHost_Live)
-        tool.run(args.toList())
+//        ExplorerConsensusTool tool = new ExplorerConsensusTool(ExplorerHost_Live)
+//        tool.run(args.toList())
     }
 
-    private SortedMap<Address, BalanceEntry> getConsensusForCurrency(CurrencyID currencyID) {
+    @Override
+    SortedMap<Address, BalanceEntry> getConsensusForCurrency(CurrencyID currencyID) {
         def balances = new JsonSlurper().parse(consensusURL(currencyID), apiParameters)
 
         TreeMap<Address, BalanceEntry> map = [:]
@@ -77,7 +80,6 @@ class ExplorerConsensusTool implements ConsensusTool {
         return balanceOut
     }
 
-    @Override
     Integer currentBlockHeight() {
         def revisionURL = new URL(proto, host, port, revisionFile)
         def revision = new JsonSlurper().parseText(revisionURL.getText(apiParameters))
@@ -85,7 +87,6 @@ class ExplorerConsensusTool implements ConsensusTool {
         return blockHeight
     }
 
-    @Override
     @TypeChecked
     List<SmartPropertyListInfo> listProperties() {
         def listPropUrl = new URL(proto, host, port, listFile)
@@ -132,12 +133,12 @@ class ExplorerConsensusTool implements ConsensusTool {
          * matches the data returned.
          */
 
-        Integer beforeBlockHeight = currentBlockHeight()
+        Integer beforeBlockHeight = currentBlockHeightAsync().get()
         Integer curBlockHeight
         SortedMap<Address, BalanceEntry> entries
         while (true) {
             entries = this.getConsensusForCurrency(currencyID)
-            curBlockHeight = currentBlockHeight()
+            curBlockHeight = currentBlockHeightAsync().get()
             if (curBlockHeight == beforeBlockHeight) {
                 // If blockHeight didn't change, we're done
                 break;
@@ -151,6 +152,7 @@ class ExplorerConsensusTool implements ConsensusTool {
     }
 
     private consensusURL(CurrencyID currencyID) {
+        // TODO: NOTE: This URL doesn't exist on recent Omniwallet/OmniExplorer
         return new URL(proto, host, port, "${file}${currencyID.getValue()}")
     }
 

@@ -15,6 +15,9 @@ public class OmniConsensusToolOptions extends BitcoinRpcCliOptions {
                 .hasArg()
                 .argName("filename")
                 .build())
+                .addOption(Option.builder("v").longOpt("verbose")
+                        .desc("Verbose output")
+                        .build())
                 .addOption(Option.builder("p").longOpt("property")
                         .desc("Omni property/currency id (numeric)")
                         .hasArg()
@@ -33,12 +36,6 @@ public class OmniConsensusToolOptions extends BitcoinRpcCliOptions {
                                 .desc("Use Omniwallet API via URL")
                                 .hasArg()
                                 .argName("url")
-                                .build())
-                        .addOption(Option.builder("chest").longOpt("omnichest-url")
-                                .desc("Use Omnichest API via URL")
-                                .hasArg()
-                                .argName("url")
                                 .build()));
     }
-
 }

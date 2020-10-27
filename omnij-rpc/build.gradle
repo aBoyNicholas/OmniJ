@@ -2,6 +2,9 @@ plugins {
     id 'java-library'
 }
 
+sourceCompatibility = 11
+targetCompatibility = 11
+
 configurations {
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
@@ -10,8 +13,12 @@ configurations {
 dependencies {
     api project(':omnij-core')
     api project(':omnij-jsonrpc')
+    api project(':omnij-rest-client-mjdk')    // For OmniwalletModernJDKClient
 
     api "${consensusjGroup}:${consensusjBtcJsonRpcGvyArtifact}:${consensusjVersion}"
+
+    // Prevent 'SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder"' during compile
+    compileOnly "org.slf4j:slf4j-jdk14:${slf4jVersion}"
 
     implementation "org.codehaus.groovy:groovy:${groovyVersion}:indy"
     implementation ("org.codehaus.groovy:groovy-json:${groovyVersion}:indy")  {

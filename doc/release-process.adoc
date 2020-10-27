@@ -3,8 +3,8 @@
 == Main Release Process
 
 
-. Official builds are now done with JDK 11. (Although the release JARs are JDK 8-compatible)
-.. `sdk use java 11.0.7.hs-adpt`
+. Official builds are now done with JDK 11. (Although most release JARs are JDK 8-compatible)
+.. `sdk use java 11.0.8.hs-adpt`
 . Update `CHANGELOG.adoc`
 . Set versions
 .. `gradle.properties`
@@ -19,7 +19,10 @@
 .. `./gradlew bintrayUpload`
 .. Confirm publish of artifacts in Bintray Web UI.
 . Update Github https://github.com/OmniLayer/OmniJ/releases[OmniJ Releases] page.
-. TBD: Update github-pages site (not set up yet)
+. Publish Github pages site including JavaDoc and GroovyDoc
+.. `./gradlew publishSite`
+. Publish to Github Packages
+.. `./gradlew publish`
 
 == Announcements
 
@@ -33,6 +36,11 @@
 .. `CHANGELOG.adoc`
 .. *Not* `README.adoc` -- it should match release version
 . Commit and push to master
+
+
+== Publish Snapshot release to Github Maven repo
+
+. `.gradlew clean buildCI regTest publish`
 
 == Install Snapshot to local maven repo
 
